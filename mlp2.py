@@ -10,10 +10,9 @@ from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout,Fl
 random.seed(42)
 
 '''Data Loading and Pre-processing'''
-data = pandas.read_csv('../data/hotel/data_80.csv')[['user_location_country','user_location_region','user_location_city','hotel_market','orig_destination_distance','hotel_cluster']]
+data = pandas.read_csv('../data/hotel/data_80.csv')
 data = data.convert_objects(convert_numeric=True)
 data = data.dropna(axis=0,how='any')
-# data = data[['user_location_country','user_location_region','user_location_city','hotel_market','orig_destination_distance','hotel_cluster']]
 X = data.ix[:, data.columns != 'hotel_cluster']
 # X = X.ix[:, X.columns != 'date_time']
 # X = X.ix[:, X.columns != 'srch_ci']
@@ -52,9 +51,9 @@ model.add(Dense(100, activation='softmax'))
 
 '''Training criterion, optimizer and evaluation metric'''
 model.compile(loss='sparse_categorical_crossentropy',
-                optimizer='adadelta',
+                optimizer='rmsprop',
                 metrics=['accuracy'])
 '''Run the model'''
 model.fit(X_train, y_train,
-            batch_size=100, nb_epoch=20,
+            batch_size=100, nb_epoch=80,
             validation_data=(X_test, y_test))

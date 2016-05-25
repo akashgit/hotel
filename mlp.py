@@ -1,42 +1,47 @@
 import random
 import pandas
 import numpy as np
-import pickle
+import tensorflow as tf
 from tensorflow.contrib import learn as skflow
 from sklearn import metrics, cross_validation
 from keras.models import Sequential
-from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout,Flatten
+from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout
 
 random.seed(42)
 
 '''Data Loading and Pre-processing'''
-data = pandas.read_csv('../data/hotel/data_80.csv')[['user_location_country','user_location_region','user_location_city','hotel_market','orig_destination_distance','hotel_cluster']]
-data = data.convert_objects(convert_numeric=True)
-data = data.dropna(axis=0,how='any')
+data = pandas.read_csv('../data/hotel/data_80.csv')
 X = data.ix[:, data.columns != 'hotel_cluster']
 y = data['hotel_cluster']
-
-X = np.array(X)[:500000].astype(int)
-y = np.array(y)[:500000].astype(int)
-
 X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2, random_state=42)
-data=[]
 
-'''Model'''
-model = Sequential()
-model.add(Embedding(np.amax(X)+1,100,input_length=X.shape[1]))
-model.add(Flatten())
-model.add(Dense(100, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(64, activation='relu'))
-# model.add(Dropout(0.5))
-model.add(Dense(100, activation='softmax'))
+X_cat = X.ix[:, X.columns != 'orig_destination_distance']
+X_cont = X['orig_destination_distance']
 
-'''Training criterion, optimizer and evaluation metric'''
-model.compile(loss='sparse_categorical_crossentropy',
-                optimizer='adadelta',
+X_test_cat = X_test.ix[:, X_test.columns != 'orig_destination_distance']
+X_test_cont = X_test['orig_destination_distance']
+
+X_train = [X_cat,X_cont]
+X_test = [X_test_cat,X_test_cont]
+
+encoder_a = Sequential()
+encoder_a.add(Embedding(np.amax(X_cat), 200,input_length=X_cat.shape[1]))
+
+encoder_b = Sequential()
+encoder_b.add(BatchNormalization(input_shape=(1,)))
+
+decoder = Sequential()
+decoder.add(Merge([encoder_a, encoder_b], mode='concat'))
+decoder.add(Dense(150, activation='relu'))
+decoder.add(Dropout(0.5))
+decoder.add(Dense(100, activation='relu'))
+decoder.add(Dropout(0.5))
+decoder.add(Dense(100, activation='softmax'))
+
+decoder.compile(loss='categorical_crossentropy',
+                optimizer='rmsprop',
                 metrics=['accuracy'])
-'''Run the model'''
-model.fit(X_train, y_train,
-            batch_size=100, nb_epoch=20,
-            validation_data=(X_test, y_test))
+
+decoder.fit(X_train, y_train,
+            batch_size=1000, nb_epoch=10,
+            validation_data=(x_test, y_test))
