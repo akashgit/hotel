@@ -10,17 +10,18 @@ from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout,Fl
 random.seed(42)
 
 '''Data Loading and Pre-processing'''
-data = pandas.read_csv('../data/hotel/data_80.csv')[['user_location_country','user_location_region','user_location_city','hotel_market','orig_destination_distance','hotel_cluster']]
+data = pandas.read_csv('../data/hotel/data_80.csv')[['user_location_country','user_location_region','user_location_city','hotel_market','orig_destination_distance']]
 data = data.convert_objects(convert_numeric=True)
 data = data.dropna(axis=0,how='any')
-X = data.ix[:, data.columns != 'hotel_cluster']
-y = data['hotel_cluster']
+X = data.ix[:, data.columns != 'orig_destination_distance']
+y = data['orig_destination_distance']
 
 X = np.array(X)[:500000].astype(int)
 y = np.array(y)[:500000].astype(int)
 
 X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2, random_state=42)
 data=[]
+print len(np.unique(y))
 
 '''Model'''
 model = Sequential()
@@ -30,7 +31,7 @@ model.add(Dense(100, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(64, activation='relu'))
 # model.add(Dropout(0.5))
-model.add(Dense(100, activation='softmax'))
+model.add(Dense(len(np.unique(y)), activation='softmax'))
 
 '''Training criterion, optimizer and evaluation metric'''
 model.compile(loss='sparse_categorical_crossentropy',
