@@ -79,7 +79,6 @@ def run_solution():
 
         if total % 1000000 == 0:
             print('Write {} lines...'.format(total))
-            break
         if line == '':
             break
 
