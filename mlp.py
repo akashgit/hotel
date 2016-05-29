@@ -10,9 +10,14 @@ from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout,Fl
 random.seed(42)
 
 '''Data Loading and Pre-processing'''
+# data = pandas.read_csv('../data/hotel/data_80.csv')[['srch_destination_id','user_location_country','user_location_region',\
+# 'channel','is_package','is_mobile','srch_rm_cnt','srch_children_cnt','user_location_city','hotel_market','orig_destination_distance'\
+# ,'srch_adults_cnt','hotel_cluster']]
+
 data = pandas.read_csv('../data/hotel/data_80.csv')[['srch_destination_id','user_location_country','user_location_region',\
-'channel','is_package','is_mobile','srch_rm_cnt','srch_children_cnt','user_location_city','hotel_market','orig_destination_distance'\
+'channel','is_package','is_mobile','srch_rm_cnt','srch_children_cnt','user_location_city','hotel_market'\
 ,'srch_adults_cnt','hotel_cluster']]
+
 data = data.convert_objects(convert_numeric=True)
 data = data.dropna(axis=0,how='any')
 X = data.ix[:, data.columns != 'hotel_cluster']
@@ -26,7 +31,7 @@ data=[]
 
 '''Model'''
 model = Sequential()
-model.add(Embedding(np.amax(X)+1,100,input_length=X.shape[1]))
+model.add(Embedding(65777+1,100,input_length=X.shape[1]))
 model.add(Flatten())
 model.add(Dense(100, activation='relu'))
 model.add(Dropout(0.5))
@@ -40,9 +45,9 @@ model.compile(loss='sparse_categorical_crossentropy',
                 metrics=['accuracy'])
 '''Run the model'''
 model.fit(X_train, y_train,
-            batch_size=100, nb_epoch=40,
+            batch_size=100, nb_epoch=30,
             validation_data=(X_test, y_test))
 
 json_string = model.to_json()
-open('mlp.json', 'w').write(json_string)
-model.save_weights('mlp_weights.h5')
+open('mlp_without_dist.json', 'w').write(json_string)
+model.save_weights('mlp_without_dist_weights.h5')

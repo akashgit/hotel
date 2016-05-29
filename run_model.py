@@ -2,29 +2,35 @@ import random
 import pandas
 import numpy as np
 import pickle
-from tensorflow.contrib import learn as skflow
-from sklearn import metrics, cross_validation
 from keras.models import Sequential
+from keras.models import model_from_json
 from keras.layers import Merge, Dense, Embedding, BatchNormalization, Dropout,Flatten
 
 random.seed(42)
 
 '''Data Loading and Pre-processing'''
 data = pandas.read_csv('../data/hotel/test_80.csv')[['srch_destination_id','user_location_country','user_location_region',\
-'channel','is_package','is_mobile','srch_rm_cnt','srch_children_cnt','user_location_city','hotel_market','orig_destination_distance'\
+'channel','is_package','is_mobile','srch_rm_cnt','srch_children_cnt','user_location_city','hotel_market'\
 ,'srch_adults_cnt']]
 data = data.convert_objects(convert_numeric=True)
 # data = data.dropna(axis=0,how='any')
 
-test = np.array(X).astype(int)
+test = np.array(data).astype(int)
 
-# X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2, random_state=42)
-data=[]
+#data=[]
 
 '''Model'''
-model = model_from_json(open('mlp_architecture.json').read())
-model.load_weights('mlp_weights.h5')
+model = model_from_json(open('mlp_without_dist.json').read())
+model.load_weights('mlp_without_dist_weights.h5')
 
+model.compile(loss='sparse_categorical_crossentropy',
+                optimizer='adadelta',
+                metrics=['accuracy'])
+
+test=np.clip(test,np.amin(test),65776)
+
+i=0
 with open('results.csv','a') as f_handle:
-    for x in test:
-        np.savetxt(f_handle,np.argmax(model(x))[:5])
+    while i <= range(len(test)):
+        np.savetxt(f_handle,model.predict_on_batch(test[i:i+100]))
+	i=i+100
