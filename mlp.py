@@ -31,7 +31,7 @@ data=[]
 
 '''Model'''
 model = Sequential()
-model.add(Embedding(65777+1,100,input_length=X.shape[1]))
+model.add(Embedding(65800+1,100,input_length=X.shape[1]))
 model.add(Flatten())
 model.add(Dense(100, activation='relu'))
 model.add(Dropout(0.5))
